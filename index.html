@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Задание</title>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </head>
+    <body>
+        <form id="myform">
+            <div>
+                <label for="name">Имя</label>
+                <input id="name" type="text" name="name" required="required">
+            </div>
+            <div>
+                <label for="email">E-mail</label>
+                <input id="email" type="email" name="email"
+                    required="required" /></div>
+            <div>
+                <label for="phone">Телефон</label>
+                <input id="phone" type="tel" name="phone" required="required"
+                    value="+7(___)___-__-__" placeholder="+7(___)___-__-__"
+                    pattern="\\+7\\s?\\[]{0,1}9[0-9]{2}\\[\\]{0,1}\\s?\\d{3}\\[-]{0,1}\\d{2}\\[-]{0,1}\\d{2}" />
+            </div>
+            <input type="submit" name="submit" value="Отправить" />
+        </form>
+        <div id="success" style="display: none">
+            <p>Заявка успешно отправлена!</p>
+        </div>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#myform').on('submit', function(event) {
+                    event.preventDefault();
+
+                    const name = $('#name').val();
+                    const nameRegex = /^[a-zA-Zа-яА-ЯёЁ\s]+$/;
+                    if (!nameRegex.test(name)) {
+                        alert('Имя может содержать только буквы и пробелы.');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: 'form.php',
+                        type: 'POST',
+                        data: $(this).serialize(),
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.success) {
+                                $('#myform').hide();
+                                $('#success').text(response.message || 'Заявка успешно отправлена!').show();
+                            } else {
+                                alert(response.message || 'Ошибка отправки заявки!');
+                            }
+                        },
+                        error: function() {
+                            alert('Произошла ошибка при отправке заявки. Попробуйте позже.');
+                        }
+                    });
+                });
+            });
+
+            function setCursorPosition(pos, e) {
+                e.focus();
+                if (e.setSelectionRange) {
+                    e.setSelectionRange(pos, pos);
+                } else if (e.createTextRange) {
+                    var range = e.createTextRange();
+                    range.collapse(true);
+                    range.moveEnd("character", pos);
+                    range.moveStart("character", pos);
+                    range.select()
+                }
+            }
+
+            function mask(e) {
+                var matrix = this.placeholder,
+                    i = 0,
+                    def = matrix.replace(/\D/g, ""),
+                    val = this.value.replace(/\D/g, "");
+                if (def.length >= val.length) val = def;
+                matrix = matrix.replace(/[_\d]/g, function(a) {
+                    return val.charAt(i++) || "_"
+                });
+                this.value = matrix;
+                i = matrix.lastIndexOf(val.substr(-1));
+                i < matrix.length && matrix != this.placeholder ? i++ : i = matrix.indexOf("_");
+                setCursorPosition(i, this)
+            }
+
+            $('#phone').on('input', mask).on('focus', function() {
+                    setCursorPosition(3, this);
+            });
+        </script>
+    </body>
+</html>
